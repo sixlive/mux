@@ -159,6 +159,14 @@ func NewEditModel(devices []audio.Device, preset config.Preset, existingNames []
 				break
 			}
 		}
+		if m.outputDevice == nil {
+			for _, d := range devices {
+				if strings.EqualFold(d.Name, preset.Output.Name) {
+					m.outputDevice = &d
+					break
+				}
+			}
+		}
 		m.outputVolume = preset.Output.Volume
 	}
 
@@ -168,6 +176,14 @@ func NewEditModel(devices []audio.Device, preset config.Preset, existingNames []
 			if d.UID == preset.Input.UID {
 				m.inputDevice = &d
 				break
+			}
+		}
+		if m.inputDevice == nil {
+			for _, d := range devices {
+				if strings.EqualFold(d.Name, preset.Input.Name) {
+					m.inputDevice = &d
+					break
+				}
 			}
 		}
 		m.inputVolume = preset.Input.Volume

@@ -4,18 +4,14 @@ macOS audio preset manager — switch input/output devices and volumes with a si
 
 ## Install
 
-```sh
-brew install tjmiller/tap/mux
-```
-
-Or download a binary from the [releases page](https://github.com/tjmiller/mux/releases).
+Download a binary from the [releases page](https://github.com/sixlive/mux/releases).
 
 ### Build from source
 
 Requires Go 1.26+ and macOS (CoreAudio).
 
 ```sh
-go install github.com/tjmiller/mux@latest
+go install github.com/sixlive/mux@latest
 ```
 
 ## Usage

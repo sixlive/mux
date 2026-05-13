@@ -19,18 +19,9 @@ universal_binaries:
   - replace: true
 
 archives:
-  - format: tar.gz
+  - formats:
+      - tar.gz
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
-
-brews:
-  - repository:
-      owner: tjmiller
-      name: homebrew-tap
-    homepage: https://github.com/tjmiller/mux
-    description: macOS audio preset manager
-    license: MIT
-    install: |
-      bin.install "mux"
 
 checksum:
   name_template: checksums.txt

@@ -664,7 +664,7 @@ func (m CreateModel) renderStepIndicator() string {
 	var parts []string
 	for i, name := range steps {
 		if i < current {
-			parts = append(parts, doneStyle.Render("✓ "+name))
+			parts = append(parts, doneStyle.Render("* "+name))
 		} else if i == current {
 			parts = append(parts, activeStyle.Render("● "+name))
 		} else {

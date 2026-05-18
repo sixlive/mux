@@ -37,23 +37,18 @@ func runList(cmd *cobra.Command, args []string) error {
 	fmt.Fprintln(os.Stdout, header.Render("PRESETS"))
 
 	nameWidth := 0
-	displayWidth := 0
 	for _, p := range cfg.Presets {
 		if len(p.Name) > nameWidth {
 			nameWidth = len(p.Name)
-		}
-		if len(p.DisplayName) > displayWidth {
-			displayWidth = len(p.DisplayName)
 		}
 	}
 
 	for _, p := range cfg.Presets {
 		namePad := strings.Repeat(" ", nameWidth-len(p.Name)+2)
-		displayPad := strings.Repeat(" ", displayWidth-len(p.DisplayName)+2)
-		summary := config.PresetSummary(&p)
-		fmt.Fprintf(os.Stdout, "  %s%s%s%s%s\n",
+		summary := strings.ReplaceAll(config.PresetSummary(&p), "\n", "\n    ")
+		fmt.Fprintf(os.Stdout, "  %s%s%s\n    %s\n",
 			p.Name, namePad,
-			dim.Render(p.DisplayName), displayPad,
+			dim.Render(p.DisplayName),
 			summary,
 		)
 	}

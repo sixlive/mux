@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
@@ -55,6 +56,7 @@ func runCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Printf("✓ Created preset '%s': %s\n", result.DisplayName, config.PresetSummary(result))
+	summary := strings.ReplaceAll(config.PresetSummary(result), "\n", "\n  ")
+	fmt.Printf("\nCreated preset '%s'\n  %s\n", result.DisplayName, summary)
 	return nil
 }

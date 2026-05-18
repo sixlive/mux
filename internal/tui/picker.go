@@ -148,7 +148,7 @@ func (m PickerModel) View() string {
 				name = selectedName.Render(p.DisplayName)
 			}
 			tag := dimStyle.Render(fmt.Sprintf("[%s]", p.Name))
-			summary := config.PresetSummary(&p)
+			summary := strings.ReplaceAll(config.PresetSummary(&p), "\n", "\n      ")
 			s.WriteString(fmt.Sprintf("  %s%s %s\n", cursor, name, tag))
 			s.WriteString(fmt.Sprintf("      %s\n", summary))
 		}

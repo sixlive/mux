@@ -145,23 +145,23 @@ func (c *Config) DeletePreset(name string) error {
 	return fmt.Errorf("preset %q not found", name)
 }
 
-func deviceSummary(emoji, name string, volume int) string {
+func deviceSummary(label, name string, volume int) string {
 	if volume < 0 {
-		return fmt.Sprintf("%s %s", emoji, name)
+		return fmt.Sprintf("%s: %s", label, name)
 	}
-	return fmt.Sprintf("%s %s @ %d%%", emoji, name, volume)
+	return fmt.Sprintf("%s: %s @ %d%%", label, name, volume)
 }
 
 func PresetSummary(p *Preset) string {
 	var parts []string
 	if p.Output != nil {
-		parts = append(parts, deviceSummary("\U0001f50a", p.Output.Name, p.Output.Volume))
+		parts = append(parts, deviceSummary("out", p.Output.Name, p.Output.Volume))
 	}
 	if p.Input != nil {
-		parts = append(parts, deviceSummary("\U0001f3a4", p.Input.Name, p.Input.Volume))
+		parts = append(parts, deviceSummary("in", p.Input.Name, p.Input.Volume))
 	}
 	if len(parts) == 0 {
 		return "(no devices configured)"
 	}
-	return strings.Join(parts, "  ·  ")
+	return strings.Join(parts, "\n")
 }

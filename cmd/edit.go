@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
@@ -63,6 +64,7 @@ func runEdit(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Printf("✓ Updated preset '%s': %s\n", result.DisplayName, config.PresetSummary(result))
+	summary := strings.ReplaceAll(config.PresetSummary(result), "\n", "\n  ")
+	fmt.Printf("\nUpdated preset '%s'\n  %s\n", result.DisplayName, summary)
 	return nil
 }

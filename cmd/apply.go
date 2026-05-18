@@ -116,6 +116,7 @@ func applyPreset(name string) error {
 		config.Save(cfg)
 	}
 
-	fmt.Printf("✓ Applied '%s': %s\n", preset.DisplayName, config.PresetSummary(preset))
+	summary := strings.ReplaceAll(config.PresetSummary(preset), "\n", "\n  ")
+	fmt.Printf("\nApplied '%s'\n  %s\n", preset.DisplayName, summary)
 	return nil
 }

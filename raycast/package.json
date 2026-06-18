@@ -1,0 +1,48 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "mux",
+  "title": "mux Audio Presets",
+  "description": "Switch macOS audio input/output presets managed by the mux CLI.",
+  "icon": "command-icon.png",
+  "author": "tjmiller",
+  "categories": ["System"],
+  "license": "MIT",
+  "commands": [
+    {
+      "name": "apply-preset",
+      "title": "Apply Audio Preset",
+      "subtitle": "mux",
+      "description": "Pick a mux preset and switch your audio devices.",
+      "mode": "view"
+    }
+  ],
+  "preferences": [
+    {
+      "name": "muxPath",
+      "type": "textfield",
+      "required": false,
+      "title": "mux Binary Path",
+      "description": "Absolute path to the mux binary. Leave blank to auto-detect (~/go/bin, Homebrew, /usr/local/bin).",
+      "placeholder": "/Users/you/go/bin/mux"
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^1.80.0",
+    "@raycast/utils": "^1.17.0"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "^1.0.11",
+    "@types/node": "^22.19.0",
+    "@types/react": "^19.0.10",
+    "eslint": "^8.57.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.4.5"
+  },
+  "scripts": {
+    "build": "ray build -e dist",
+    "dev": "ray develop",
+    "fix-lint": "ray lint --fix",
+    "lint": "ray lint",
+    "publish": "npx @raycast/api@latest publish"
+  }
+}

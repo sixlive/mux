@@ -7,7 +7,7 @@ created with the CLI.
 
 ## Prerequisites
 
-- The [`mux`](https://github.com/sixlive/mux) CLI installed (`go install github.com/sixlive/mux@latest`).
+- The `mux` CLI installed and on your `$PATH` — see [Install](../README.md#install) in the root README.
 - [Node.js](https://nodejs.org/) 18+ and [Raycast](https://raycast.com/).
 
 ## Develop / install locally

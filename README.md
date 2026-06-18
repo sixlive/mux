@@ -53,6 +53,12 @@ Each preset can configure:
 
 Devices are matched by name, so presets survive USB reconnections that change device UIDs.
 
+## Raycast
+
+A [Raycast](https://raycast.com/) extension lives in [`raycast/`](raycast/) — pick and apply presets with fuzzy search, without opening a terminal. It reads the same `~/.config/mux/config.json`, so presets you create with the CLI show up automatically.
+
+See [`raycast/README.md`](raycast/README.md) for setup.
+
 ## License
 
 MIT

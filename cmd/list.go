@@ -7,7 +7,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/spf13/cobra"
-	"github.com/tjmiller/mux/internal/config"
+	"github.com/sixlive/mux/internal/config"
 )
 
 var listCmd = &cobra.Command{

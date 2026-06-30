@@ -1,4 +1,4 @@
-module github.com/tjmiller/mux
+module github.com/sixlive/mux
 
 go 1.26.3
 

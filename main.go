@@ -1,6 +1,6 @@
 package main
 
-import "github.com/tjmiller/mux/cmd"
+import "github.com/sixlive/mux/cmd"
 
 func main() {
 	cmd.Execute()

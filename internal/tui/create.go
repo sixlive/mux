@@ -10,8 +10,8 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/tjmiller/mux/internal/audio"
-	"github.com/tjmiller/mux/internal/config"
+	"github.com/sixlive/mux/internal/audio"
+	"github.com/sixlive/mux/internal/config"
 )
 
 type createStep int

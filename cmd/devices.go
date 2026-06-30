@@ -7,7 +7,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/spf13/cobra"
-	"github.com/tjmiller/mux/internal/audio"
+	"github.com/sixlive/mux/internal/audio"
 )
 
 var devicesCmd = &cobra.Command{

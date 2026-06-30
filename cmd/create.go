@@ -6,9 +6,9 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
-	"github.com/tjmiller/mux/internal/audio"
-	"github.com/tjmiller/mux/internal/config"
-	"github.com/tjmiller/mux/internal/tui"
+	"github.com/sixlive/mux/internal/audio"
+	"github.com/sixlive/mux/internal/config"
+	"github.com/sixlive/mux/internal/tui"
 )
 
 var createCmd = &cobra.Command{

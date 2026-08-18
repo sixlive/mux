@@ -1,6 +1,6 @@
 # mux
 
-macOS audio preset manager — switch input/output devices and volumes with a single command.
+macOS audio preset manager, switch input/output devices and volumes with a single command.
 
 ## Install
 

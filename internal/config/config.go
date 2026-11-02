@@ -18,7 +18,7 @@ type Preset struct {
 	DisplayName string        `json:"display_name"`
 	Output      *DeviceConfig `json:"output,omitempty"`
 	Input       *DeviceConfig `json:"input,omitempty"`
-	// Not editable in the TUI yet; set by hand in config.json. Volume is ignored.
+	// Volume is ignored; sound effects share the device's volume.
 	SoundEffects *DeviceConfig `json:"sound_effects,omitempty"`
 }
 

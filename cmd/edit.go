@@ -57,6 +57,8 @@ func runEdit(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
+	result.SoundEffects = preset.SoundEffects
+
 	if err := cfg.UpdatePreset(name, *result); err != nil {
 		return err
 	}

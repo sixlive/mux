@@ -50,6 +50,11 @@ Presets are stored in `~/.config/mux/config.json`.
 Each preset can configure:
 - Output device and volume
 - Input device and volume
+- Sound effects device (the "Play sound effects through" setting), via a `sound_effects` entry edited by hand:
+
+```json
+"sound_effects": { "uid": "BuiltInSpeakerDevice", "name": "MacBook Pro Speakers" }
+```
 
 Devices are matched by name, so presets survive USB reconnections that change device UIDs.
 

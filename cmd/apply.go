@@ -100,6 +100,24 @@ func applyPreset(name string) error {
 		}
 	}
 
+	if preset.SoundEffects != nil {
+		uid, err := resolveDeviceUID(preset.SoundEffects, devices)
+		if err != nil {
+			return fmt.Errorf("sound effects: %w", err)
+		}
+		if uid != preset.SoundEffects.UID {
+			preset.SoundEffects.UID = uid
+			configChanged = true
+		}
+
+		currentUID, _ := audio.GetDefaultSystemOutputUID()
+		if currentUID != uid {
+			if err := audio.SetDefaultSystemOutputDevice(uid); err != nil {
+				return fmt.Errorf("failed to set sound effects device %q: %w", preset.SoundEffects.Name, err)
+			}
+		}
+	}
+
 	if switched {
 		time.Sleep(500 * time.Millisecond)
 	}

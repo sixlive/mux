@@ -221,6 +221,14 @@ int mux_set_default_input_device(const char *uid) {
     return set_default_device(kAudioHardwarePropertyDefaultInputDevice, uid);
 }
 
+int mux_get_default_system_output_uid(char *outUID, int maxLen) {
+    return get_default_device_uid(kAudioHardwarePropertyDefaultSystemOutputDevice, outUID, maxLen);
+}
+
+int mux_set_default_system_output_device(const char *uid) {
+    return set_default_device(kAudioHardwarePropertyDefaultSystemOutputDevice, uid);
+}
+
 // Volume strategy: try HAL kAudioDevicePropertyVolumeScalar first (master, then per-channel),
 // fall back to AudioHardwareService VirtualMainVolume for devices that only expose volume
 // through that API (e.g. some USB audio interfaces).

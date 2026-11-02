@@ -18,6 +18,8 @@ type Preset struct {
 	DisplayName string        `json:"display_name"`
 	Output      *DeviceConfig `json:"output,omitempty"`
 	Input       *DeviceConfig `json:"input,omitempty"`
+	// Volume is ignored; sound effects share the device's volume.
+	SoundEffects *DeviceConfig `json:"sound_effects,omitempty"`
 }
 
 type DeviceConfig struct {
@@ -159,6 +161,9 @@ func PresetSummary(p *Preset) string {
 	}
 	if p.Input != nil {
 		parts = append(parts, deviceSummary("in", p.Input.Name, p.Input.Volume))
+	}
+	if p.SoundEffects != nil {
+		parts = append(parts, deviceSummary("fx", p.SoundEffects.Name, -1))
 	}
 	if len(parts) == 0 {
 		return "(no devices configured)"

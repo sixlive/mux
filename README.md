@@ -50,6 +50,7 @@ Presets are stored in `~/.config/mux/config.json`.
 Each preset can configure:
 - Output device and volume
 - Input device and volume
+- Sound effects device (the "Play sound effects through" setting): the same device as output, another device, or left alone
 
 Devices are matched by name, so presets survive USB reconnections that change device UIDs.
 

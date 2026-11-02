@@ -158,6 +158,25 @@ func SetDefaultOutputDevice(uid string) error {
 	return nil
 }
 
+func GetDefaultSystemOutputUID() (string, error) {
+	var buf [256]C.char
+	status := C.mux_get_default_system_output_uid(&buf[0], 256)
+	if status != 0 {
+		return "", fmt.Errorf("failed to get sound effects device: CoreAudio error %d", status)
+	}
+	return C.GoString(&buf[0]), nil
+}
+
+func SetDefaultSystemOutputDevice(uid string) error {
+	cUID := C.CString(uid)
+	defer C.free(unsafe.Pointer(cUID))
+	status := C.mux_set_default_system_output_device(cUID)
+	if status != 0 {
+		return fmt.Errorf("failed to set sound effects device: CoreAudio error %d", status)
+	}
+	return nil
+}
+
 func GetVolume(uid string, scope Scope) (*DeviceVolume, error) {
 	cUID := C.CString(uid)
 	defer C.free(unsafe.Pointer(cUID))

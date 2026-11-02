@@ -25,8 +25,29 @@ const (
 	stepConfigureInput
 	stepInputDevice
 	stepInputVolume
+	stepSoundEffects
+	stepSoundEffectsDevice
 	stepConfirm
 )
+
+type soundEffectsMode int
+
+const (
+	soundEffectsSameAsOutput soundEffectsMode = iota
+	soundEffectsPick
+	soundEffectsSkip
+)
+
+func (s soundEffectsMode) label() string {
+	switch s {
+	case soundEffectsSameAsOutput:
+		return "Same as output"
+	case soundEffectsPick:
+		return "Pick a device"
+	default:
+		return "Skip"
+	}
+}
 
 type deviceItem struct {
 	device audio.Device
@@ -84,8 +105,9 @@ type CreateModel struct {
 	displayInput textinput.Model
 	volumeInput  textinput.Model
 
-	outputDeviceList list.Model
-	inputDeviceList  list.Model
+	outputDeviceList       list.Model
+	inputDeviceList        list.Model
+	soundEffectsDeviceList list.Model
 
 	outputDevice        *audio.Device
 	outputVolume        int
@@ -94,6 +116,10 @@ type CreateModel struct {
 	inputVolume         int
 	inputAcceptsVolume  bool
 
+	soundEffectsMode   soundEffectsMode
+	soundEffectsChoice int
+	soundEffectsDevice *audio.Device
+
 	configureOutput bool
 	configureInput  bool
 	yesNoChoice     int
@@ -101,6 +127,7 @@ type CreateModel struct {
 	allDevices    []audio.Device
 	defaultOutUID string
 	defaultInUID  string
+	defaultFxUID  string
 
 	width  int
 	height int
@@ -115,6 +142,7 @@ type CreateModel struct {
 func NewCreateModel(devices []audio.Device, existingNames []string) CreateModel {
 	defaultOutUID, _ := audio.GetDefaultOutputUID()
 	defaultInUID, _ := audio.GetDefaultInputUID()
+	defaultFxUID, _ := audio.GetDefaultSystemOutputUID()
 
 	ni := textinput.New()
 	ni.Placeholder = "my-preset"
@@ -137,6 +165,7 @@ func NewCreateModel(devices []audio.Device, existingNames []string) CreateModel 
 		allDevices:    devices,
 		defaultOutUID: defaultOutUID,
 		defaultInUID:  defaultInUID,
+		defaultFxUID:  defaultFxUID,
 		existingNames: existingNames,
 		outputVolume:  50,
 		inputVolume:   50,
@@ -189,7 +218,31 @@ func NewEditModel(devices []audio.Device, preset config.Preset, existingNames []
 		m.inputVolume = preset.Input.Volume
 	}
 
+	switch {
+	case preset.SoundEffects == nil:
+		m.soundEffectsMode = soundEffectsSkip
+	case preset.Output != nil && (preset.SoundEffects.UID == preset.Output.UID || strings.EqualFold(preset.SoundEffects.Name, preset.Output.Name)):
+		m.soundEffectsMode = soundEffectsSameAsOutput
+	default:
+		m.soundEffectsMode = soundEffectsPick
+		m.soundEffectsDevice = findDevice(devices, preset.SoundEffects)
+	}
+
 	return m
+}
+
+func findDevice(devices []audio.Device, dc *config.DeviceConfig) *audio.Device {
+	for _, d := range devices {
+		if d.UID == dc.UID {
+			return &d
+		}
+	}
+	for _, d := range devices {
+		if strings.EqualFold(d.Name, dc.Name) {
+			return &d
+		}
+	}
+	return nil
 }
 
 func (m CreateModel) Init() tea.Cmd {
@@ -230,6 +283,10 @@ func (m CreateModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.updateDeviceList(msg, false)
 	case stepInputVolume:
 		return m.updateVolume(msg, false)
+	case stepSoundEffects:
+		return m.updateSoundEffects(msg)
+	case stepSoundEffectsDevice:
+		return m.updateSoundEffectsDevice(msg)
 	case stepConfirm:
 		return m.updateConfirm(msg)
 	}
@@ -269,7 +326,15 @@ func (m CreateModel) goBack() (tea.Model, tea.Cmd) {
 		m.yesNoChoice = 0
 	case stepInputVolume:
 		m.step = stepInputDevice
+	case stepSoundEffectsDevice:
+		m = m.enterSoundEffects()
 	case stepConfirm:
+		if m.soundEffectsMode == soundEffectsPick {
+			m.step = stepSoundEffectsDevice
+		} else {
+			m = m.enterSoundEffects()
+		}
+	case stepSoundEffects:
 		if m.configureInput && m.inputAcceptsVolume {
 			m.step = stepInputVolume
 			m.volumeInput.SetValue(strconv.Itoa(m.inputVolume))
@@ -348,7 +413,7 @@ func (m CreateModel) updateYesNo(msg tea.Msg, isOutput bool) (tea.Model, tea.Cmd
 				m.configureOutput = m.yesNoChoice == 0
 				if m.configureOutput {
 					m.step = stepOutputDevice
-					m.outputDeviceList = m.buildDeviceList(true)
+					m.outputDeviceList = m.buildDeviceList(true, "Select output device", m.defaultOutUID)
 					return m, nil
 				}
 				m.step = stepConfigureInput
@@ -360,10 +425,10 @@ func (m CreateModel) updateYesNo(msg tea.Msg, isOutput bool) (tea.Model, tea.Cmd
 				m.configureInput = m.yesNoChoice == 0
 				if m.configureInput {
 					m.step = stepInputDevice
-					m.inputDeviceList = m.buildDeviceList(false)
+					m.inputDeviceList = m.buildDeviceList(false, "Select input device", m.defaultInUID)
 					return m, nil
 				}
-				m.step = stepConfirm
+				m = m.enterSoundEffects()
 			}
 			return m, nil
 		}
@@ -371,12 +436,8 @@ func (m CreateModel) updateYesNo(msg tea.Msg, isOutput bool) (tea.Model, tea.Cmd
 	return m, nil
 }
 
-func (m CreateModel) buildDeviceList(output bool) list.Model {
-	uid := m.defaultInUID
-	if output {
-		uid = m.defaultOutUID
-	}
-	del := deviceDelegate{defaultUID: uid}
+func (m CreateModel) buildDeviceList(output bool, title, defaultUID string) list.Model {
+	del := deviceDelegate{defaultUID: defaultUID}
 
 	var items []list.Item
 	for _, d := range m.allDevices {
@@ -396,11 +457,7 @@ func (m CreateModel) buildDeviceList(output bool) list.Model {
 	}
 
 	l := list.New(items, del, 60, height)
-	if output {
-		l.Title = "Select output device"
-	} else {
-		l.Title = "Select input device"
-	}
+	l.Title = title
 	l.SetShowStatusBar(false)
 	l.SetShowHelp(true)
 	l.Styles.Title = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("12")).MarginLeft(2)
@@ -443,7 +500,7 @@ func (m CreateModel) updateDeviceList(msg tea.Msg, isOutput bool) (tea.Model, te
 					m.volumeInput.Focus()
 				} else {
 					m.inputVolume = -1
-					m.step = stepConfirm
+					m = m.enterSoundEffects()
 				}
 			}
 			return m, nil
@@ -456,6 +513,68 @@ func (m CreateModel) updateDeviceList(msg tea.Msg, isOutput bool) (tea.Model, te
 	} else {
 		m.inputDeviceList, cmd = m.inputDeviceList.Update(msg)
 	}
+	return m, cmd
+}
+
+func (m CreateModel) soundEffectsOptions() []soundEffectsMode {
+	if m.configureOutput && m.outputDevice != nil {
+		return []soundEffectsMode{soundEffectsSameAsOutput, soundEffectsPick, soundEffectsSkip}
+	}
+	return []soundEffectsMode{soundEffectsPick, soundEffectsSkip}
+}
+
+func (m CreateModel) enterSoundEffects() CreateModel {
+	m.step = stepSoundEffects
+	m.soundEffectsChoice = 0
+	for i, opt := range m.soundEffectsOptions() {
+		if opt == m.soundEffectsMode {
+			m.soundEffectsChoice = i
+		}
+	}
+	return m
+}
+
+func (m CreateModel) updateSoundEffects(msg tea.Msg) (tea.Model, tea.Cmd) {
+	keyMsg, ok := msg.(tea.KeyMsg)
+	if !ok {
+		return m, nil
+	}
+	opts := m.soundEffectsOptions()
+	switch keyMsg.String() {
+	case "left", "h":
+		if m.soundEffectsChoice > 0 {
+			m.soundEffectsChoice--
+		}
+	case "right", "l":
+		if m.soundEffectsChoice < len(opts)-1 {
+			m.soundEffectsChoice++
+		}
+	case "tab":
+		m.soundEffectsChoice = (m.soundEffectsChoice + 1) % len(opts)
+	case "enter":
+		m.soundEffectsMode = opts[m.soundEffectsChoice]
+		if m.soundEffectsMode == soundEffectsPick {
+			m.step = stepSoundEffectsDevice
+			m.soundEffectsDeviceList = m.buildDeviceList(true, "Select sound effects device", m.defaultFxUID)
+			return m, nil
+		}
+		m.step = stepConfirm
+	}
+	return m, nil
+}
+
+func (m CreateModel) updateSoundEffectsDevice(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if keyMsg, ok := msg.(tea.KeyMsg); ok && keyMsg.String() == "enter" {
+		if item, ok := m.soundEffectsDeviceList.SelectedItem().(deviceItem); ok {
+			dev := item.device
+			m.soundEffectsDevice = &dev
+			m.step = stepConfirm
+			return m, nil
+		}
+	}
+
+	var cmd tea.Cmd
+	m.soundEffectsDeviceList, cmd = m.soundEffectsDeviceList.Update(msg)
 	return m, cmd
 }
 
@@ -478,7 +597,7 @@ func (m CreateModel) updateVolume(msg tea.Msg, isOutput bool) (tea.Model, tea.Cm
 				}
 			} else {
 				m.inputVolume = val
-				m.step = stepConfirm
+				m = m.enterSoundEffects()
 			}
 			return m, nil
 		}
@@ -521,6 +640,16 @@ func (m CreateModel) buildPreset() config.Preset {
 			UID:    m.inputDevice.UID,
 			Name:   m.inputDevice.Name,
 			Volume: m.inputVolume,
+		}
+	}
+	switch m.soundEffectsMode {
+	case soundEffectsSameAsOutput:
+		if p.Output != nil {
+			p.SoundEffects = &config.DeviceConfig{UID: p.Output.UID, Name: p.Output.Name, Volume: -1}
+		}
+	case soundEffectsPick:
+		if m.soundEffectsDevice != nil {
+			p.SoundEffects = &config.DeviceConfig{UID: m.soundEffectsDevice.UID, Name: m.soundEffectsDevice.Name, Volume: -1}
 		}
 	}
 	return p
@@ -634,6 +763,22 @@ func (m CreateModel) View() string {
 		}
 		s.WriteString(hintStyle.Render("Enter a value 0-100, press Enter to continue"))
 
+	case stepSoundEffects:
+		s.WriteString(labelStyle.Render("Play sound effects through:"))
+		s.WriteString("\n\n  ")
+		for i, opt := range m.soundEffectsOptions() {
+			if i == m.soundEffectsChoice {
+				s.WriteString(selectedStyle.Render("▸ " + opt.label() + "  "))
+			} else {
+				s.WriteString(unselectedStyle.Render("  " + opt.label() + "  "))
+			}
+		}
+		s.WriteString("\n\n")
+		s.WriteString(hintStyle.Render("←/→ to select, Enter to confirm, Esc to go back"))
+
+	case stepSoundEffectsDevice:
+		s.WriteString(m.soundEffectsDeviceList.View())
+
 	case stepConfirm:
 		s.WriteString(m.renderConfirmation())
 	}
@@ -643,17 +788,19 @@ func (m CreateModel) View() string {
 }
 
 func (m CreateModel) renderStepIndicator() string {
-	steps := []string{"Name", "Display", "Output", "Input", "Confirm"}
+	steps := []string{"Name", "Display", "Output", "Input", "Sounds", "Confirm"}
 	stepMap := map[createStep]int{
-		stepName:            0,
-		stepDisplayName:     1,
-		stepConfigureOutput: 2,
-		stepOutputDevice:    2,
-		stepOutputVolume:    2,
-		stepConfigureInput:  3,
-		stepInputDevice:     3,
-		stepInputVolume:     3,
-		stepConfirm:         4,
+		stepName:               0,
+		stepDisplayName:        1,
+		stepConfigureOutput:    2,
+		stepOutputDevice:       2,
+		stepOutputVolume:       2,
+		stepConfigureInput:     3,
+		stepInputDevice:        3,
+		stepInputVolume:        3,
+		stepSoundEffects:       4,
+		stepSoundEffectsDevice: 4,
+		stepConfirm:            5,
 	}
 
 	current := stepMap[m.step]
@@ -730,6 +877,12 @@ func (m CreateModel) renderConfirmation() string {
 	} else {
 		s.WriteString(fmt.Sprintf("  %s  %s\n", labelStyle.Render("Input:       "), labelStyle.Render("(unchanged)")))
 	}
+
+	fx := labelStyle.Render("(unchanged)")
+	if p := m.buildPreset(); p.SoundEffects != nil {
+		fx = valueStyle.Render(p.SoundEffects.Name)
+	}
+	s.WriteString(fmt.Sprintf("  %s  %s\n", labelStyle.Render("Sound effects"), fx))
 
 	s.WriteString("  " + borderStyle.Render("─────────────────────────────"))
 	s.WriteString("\n\n")

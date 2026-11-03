@@ -5,6 +5,7 @@ import {
   Icon,
   List,
   Toast,
+  closeMainWindow,
   getPreferenceValues,
   showHUD,
   showToast,
@@ -95,14 +96,20 @@ export default function Command() {
     const toast = await showToast({ style: Toast.Style.Animated, title: `Applying ${preset.display_name}…` });
     try {
       await execFileAsync(bin, ["apply", preset.name]);
-      await toast.hide();
-      await showHUD(`🎧 ${preset.display_name}`);
     } catch (e) {
       const err = e as { stderr?: string; message?: string };
       toast.style = Toast.Style.Failure;
       toast.title = `Failed to apply ${preset.display_name}`;
       toast.message = (err.stderr || err.message || String(e)).trim();
+      return;
     }
+
+    // Outside the try so a UI hiccup isn't reported as a failed apply.
+    // showHUD closes the window in Raycast but not in Tinycast, so close it
+    // explicitly for consistent behavior across hosts.
+    await toast.hide();
+    await closeMainWindow();
+    await showHUD(`🎧 ${preset.display_name}`);
   }
 
   if (error) {

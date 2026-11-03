@@ -89,17 +89,19 @@ export default function Command() {
       return;
     }
 
+    // Keep a handle on the toast and resolve it explicitly. Raycast's showHUD
+    // closes the window (and the toast with it), but other hosts like Tinycast
+    // only show the HUD, leaving an orphaned "Applying…" spinner behind.
+    const toast = await showToast({ style: Toast.Style.Animated, title: `Applying ${preset.display_name}…` });
     try {
-      await showToast({ style: Toast.Style.Animated, title: `Applying ${preset.display_name}…` });
       await execFileAsync(bin, ["apply", preset.name]);
+      await toast.hide();
       await showHUD(`🎧 ${preset.display_name}`);
     } catch (e) {
       const err = e as { stderr?: string; message?: string };
-      await showToast({
-        style: Toast.Style.Failure,
-        title: `Failed to apply ${preset.display_name}`,
-        message: (err.stderr || err.message || String(e)).trim(),
-      });
+      toast.style = Toast.Style.Failure;
+      toast.title = `Failed to apply ${preset.display_name}`;
+      toast.message = (err.stderr || err.message || String(e)).trim();
     }
   }
 
